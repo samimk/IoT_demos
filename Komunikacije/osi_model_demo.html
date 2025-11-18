@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISO OSI Model - Enkapsulacija</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .demo-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+            margin-top: 30px;
+            align-items: start;
+        }
+        
+        .controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            height: fit-content;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .control-group input, .control-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-reset {
+            background: #dc3545;
+        }
+        
+        .btn-reset:hover {
+            background: #c82333;
+        }
+        
+        .visualization {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            min-height: 500px;
+        }
+        
+        .layer {
+            margin-bottom: 15px;
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: all 0.5s ease;
+        }
+        
+        .layer.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .layer-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .layer-number {
+            width: 30px;
+            height: 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .layer-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .packet-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        
+        .header {
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: nowrap;
+            color: white;
+            font-weight: 600;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .data {
+            padding: 8px 12px;
+            background: #e3f2fd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #1976d2;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .layer-7 { background: #e91e63; }
+        .layer-6 { background: #9c27b0; }
+        .layer-5 { background: #673ab7; }
+        .layer-4 { background: #3f51b5; }
+        .layer-3 { background: #2196f3; }
+        .layer-2 { background: #00bcd4; }
+        .layer-1 { background: #009688; }
+        
+        .info-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #856404;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .protocol-info {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #1976d2;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: #999;
+            font-size: 14px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        footer .course-name {
+            font-weight: 600;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 ISO OSI Referentni Model</h1>
+        <div class="subtitle">Interaktivna demonstracija enkapsulacije podataka kroz slojeve</div>
+        
+        <div class="demo-container">
+            <div class="controls">
+                <div class="control-group">
+                    <label>Poruka za slanje:</label>
+                    <input type="text" id="messageInput" value="Hello IoT!" placeholder="Unesite poruku">
+                </div>
+                
+                <div class="control-group">
+                    <label>Aplikacijski protokol:</label>
+                    <select id="appProtocol">
+                        <option value="HTTP">HTTP</option>
+                        <option value="MQTT">MQTT</option>
+                        <option value="CoAP">CoAP</option>
+                        <option value="FTP">FTP</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>Transportni protokol:</label>
+                    <select id="transportProtocol">
+                        <option value="TCP">TCP</option>
+                        <option value="UDP">UDP</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>Izvorišna IP adresa:</label>
+                    <input type="text" id="srcIP" value="192.168.1.100" placeholder="0.0.0.0">
+                </div>
+                
+                <div class="control-group">
+                    <label>Odredišna IP adresa:</label>
+                    <input type="text" id="dstIP" value="195.130.59.19" placeholder="0.0.0.0">
+                </div>
+                
+                <button class="btn" onclick="startEncapsulation()">🚀 Započni Enkapsulaciju</button>
+                <button class="btn btn-reset" onclick="reset()">🔄 Resetuj</button>
+                
+                <div class="info-box">
+                    💡 <strong>Tip:</strong> Kliknite "Započni Enkapsulaciju" da vidite kako se podaci pakuju kroz ISO OSI slojeve.
+                </div>
+            </div>
+            
+            <div class="visualization">
+                <div id="layer7" class="layer">
+                    <div class="layer-header">
+                        <div class="layer-number">7</div>
+                        <div class="layer-name">Aplikacijski sloj (Application Layer)</div>
+                    </div>
+                    <div class="packet-wrapper">
+                        <div class="header layer-7" id="header7"></div>
+                        <div class="data" id="data7"></div>
+                    </div>
+                    <div class="protocol-info" id="info7"></div>
+                </div>
+                
+                <div id="layer6" class="layer">
+                    <div class="layer-header">
+                        <div class="layer-number">6</div>
+                        <div class="layer-name">Prezentacijski sloj (Presentation Layer)</div>
+                    </div>
+                    <div class="packet-wrapper">
+                        <div class="header layer-6" id="header6"></div>
+                        <div class="header layer-7" id="header7-copy"></div>
+                        <div class="data" id="data6"></div>
+                    </div>
+                    <div class="protocol-info" id="info6"></div>
+                </div>
+                
+                <div id="layer5" class="layer">
+                    <div class="layer-header">
+                        <div class="layer-number">5</div>
+                        <div class="layer-name">Sloj sesije (Session Layer)</div>
+                    </div>
+                    <div class="packet-wrapper">
+                        <div class="header layer-5" id="header5"></div>
+                        <div class="header layer-6" id="header6-copy"></div>
+                        <div class="header layer-7" id="header7-copy2"></div>
+                        <div class="data" id="data5"></div>
+                    </div>
+                    <div class="protocol-info" id="info5"></div>
+                </div>
+                
+                <div id="layer4" class="layer">
+                    <div class="layer-header">
+                        <div class="layer-number">4</div>
+                        <div class="layer-name">Transportni sloj (Transport Layer)</div>
+                    </div>
+                    <div class="packet-wrapper">
+                        <div class="header layer-4" id="header4"></div>
+                        <div class="header layer-5" id="header5-copy"></div>
+                        <div class="header layer-6" id="header6-copy2"></div>
+                        <div class="header layer-7" id="header7-copy3"></div>
+                        <div class="data" id="data4"></div>
+                    </div>
+                    <div class="protocol-info" id="info4"></div>
+                </div>
+                
+                <div id="layer3" class="layer">
+                    <div class="layer-header">
+                        <div class="layer-number">3</div>
+                        <div class="layer-name">Mrežni sloj (Network Layer)</div>
+                    </div>
+                    <div class="packet-wrapper">
+                        <div class="header layer-3" id="header3"></div>
+                        <div class="header layer-4" id="header4-copy"></div>
+                        <div class="header layer-5" id="header5-copy2"></div>
+                        <div class="header layer-6" id="header6-copy3"></div>
+                        <div class="header layer-7" id="header7-copy4"></div>
+                        <div class="data" id="data3"></div>
+                    </div>
+                    <div class="protocol-info" id="info3"></div>
+                </div>
+                
+                <div id="layer2" class="layer">
+                    <div class="layer-header">
+                        <div class="layer-number">2</div>
+                        <div class="layer-name">Sloj linka podataka (Data Link Layer)</div>
+                    </div>
+                    <div class="packet-wrapper">
+                        <div class="header layer-2" id="header2"></div>
+                        <div class="header layer-3" id="header3-copy"></div>
+                        <div class="header layer-4" id="header4-copy2"></div>
+                        <div class="header layer-5" id="header5-copy3"></div>
+                        <div class="header layer-6" id="header6-copy4"></div>
+                        <div class="header layer-7" id="header7-copy5"></div>
+                        <div class="data" id="data2"></div>
+                        <div class="header layer-2" id="trailer2">FCS</div>
+                    </div>
+                    <div class="protocol-info" id="info2"></div>
+                </div>
+                
+                <div id="layer1" class="layer">
+                    <div class="layer-header">
+                        <div class="layer-number">1</div>
+                        <div class="layer-name">Fizički sloj (Physical Layer)</div>
+                    </div>
+                    <div class="packet-wrapper">
+                        <div class="header layer-1">Preamble</div>
+                        <div class="header layer-2" id="header2-copy"></div>
+                        <div class="header layer-3" id="header3-copy2"></div>
+                        <div class="header layer-4" id="header4-copy3"></div>
+                        <div class="header layer-5" id="header5-copy4"></div>
+                        <div class="header layer-6" id="header6-copy5"></div>
+                        <div class="header layer-7" id="header7-copy6"></div>
+                        <div class="data" id="data1"></div>
+                        <div class="header layer-2" id="trailer2-copy">FCS</div>
+                    </div>
+                    <div class="protocol-info" id="info1"></div>
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Originalna veličina</div>
+                        <div class="stat-value" id="originalSize">0</div>
+                        <div class="stat-label">bajtova</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Ukupna veličina</div>
+                        <div class="stat-value" id="totalSize">0</div>
+                        <div class="stat-label">bajtova</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Overhead</div>
+                        <div class="stat-value" id="overhead">0</div>
+                        <div class="stat-label">bajtova</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <div class="course-name">Internet stvari | Red. prof. dr Samim Konjicija</div>
+            <div>Sarajevo, 2025. godine</div>
+        </footer>
+    </div>
+
+    <script>
+        let currentLayer = 0;
+        
+        function reset() {
+            currentLayer = 0;
+            const layers = document.querySelectorAll('.layer');
+            layers.forEach(layer => {
+                layer.classList.remove('active');
+            });
+            
+            document.getElementById('originalSize').textContent = '0';
+            document.getElementById('totalSize').textContent = '0';
+            document.getElementById('overhead').textContent = '0';
+        }
+        
+        async function startEncapsulation() {
+            reset();
+            
+            const message = document.getElementById('messageInput').value || 'Hello IoT!';
+            const appProtocol = document.getElementById('appProtocol').value;
+            const transportProtocol = document.getElementById('transportProtocol').value;
+            const srcIP = document.getElementById('srcIP').value;
+            const dstIP = document.getElementById('dstIP').value;
+            
+            const messageSize = message.length;
+            let totalOverhead = 0;
+            
+            // Layer 7 - Application
+            const appOverhead = (appProtocol === 'HTTP' ? 200 : appProtocol === 'MQTT' ? 4 : 10);
+            await showLayer(7, appProtocol, message, 
+                `${appProtocol} zahtjev sa metodom, URI i headerima (tipično ${appOverhead}B)`);
+            totalOverhead += appOverhead;
+            updateStats(messageSize, totalOverhead);
+            
+            // Layer 6 - Presentation
+            await showLayer(6, 'Encoding', message,
+                'Kodiranje podataka (UTF-8, SSL/TLS šifriranje, kompresija)');
+            updateStats(messageSize, totalOverhead);
+            
+            // Layer 5 - Session
+            await showLayer(5, 'Session', message,
+                'Upravljanje sesijom (Session ID, sinhronizacija)');
+            updateStats(messageSize, totalOverhead);
+            
+            // Layer 4 - Transport
+            const srcPort = appProtocol === 'HTTP' ? '49152' : appProtocol === 'MQTT' ? '35841' : '51234';
+            const dstPort = appProtocol === 'HTTP' ? '80' : appProtocol === 'MQTT' ? '1883' : '5683';
+            const transportOverhead = (transportProtocol === 'TCP' ? 20 : 8);
+            await showLayer(4, `${transportProtocol} | Src:${srcPort} Dst:${dstPort}`, message,
+                `${transportProtocol} header: Source/Dest Port (4B), ${transportProtocol === 'TCP' ? 'Seq/Ack (8B), Flags (2B), Window (2B), Checksum (2B) = 20B' : 'Length (2B), Checksum (2B) = 8B'}`);
+            totalOverhead += transportOverhead;
+            updateStats(messageSize, totalOverhead);
+            
+            // Layer 3 - Network
+            await showLayer(3, `IP | Src:${srcIP} Dst:${dstIP}`, message,
+                'IP header: Version (1B), TTL (1B), Protocol (1B), Checksum (2B), Src/Dst IP (8B) = 20B');
+            totalOverhead += 20;
+            updateStats(messageSize, totalOverhead);
+            
+            // Layer 2 - Data Link
+            await showLayer(2, 'Ethernet | MAC Src/Dst', message,
+                'Ethernet header: Preamble (8B), Dest MAC (6B), Src MAC (6B), Type (2B), FCS (4B) = 26B');
+            totalOverhead += 26;
+            updateStats(messageSize, totalOverhead);
+            
+            // Layer 1 - Physical
+            await showLayer(1, 'Bitovi', message,
+                'Pretvaranje u električne signale ili radio talase za prenos kroz medij');
+            updateStats(messageSize, totalOverhead);
+        }
+        
+        function updateStats(originalSize, overhead) {
+            document.getElementById('originalSize').textContent = originalSize;
+            document.getElementById('totalSize').textContent = originalSize + overhead;
+            document.getElementById('overhead').textContent = overhead;
+        }
+        
+        function showLayer(layerNum, headerText, data, info) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const layer = document.getElementById(`layer${layerNum}`);
+                    layer.classList.add('active');
+                    
+                    // Set header
+                    document.getElementById(`header${layerNum}`).textContent = headerText;
+                    
+                    // Set data
+                    document.getElementById(`data${layerNum}`).textContent = data;
+                    
+                    // Copy headers to subsequent layers
+                    for (let i = layerNum - 1; i >= 1; i--) {
+                        const copyElement = document.getElementById(`header${layerNum}-copy${layerNum - i > 1 ? layerNum - i : ''}`);
+                        if (copyElement) {
+                            copyElement.textContent = headerText;
+                        }
+                    }
+                    
+                    // Set info
+                    document.getElementById(`info${layerNum}`).textContent = info;
+                    
+                    resolve();
+                }, 800);
+            });
+        }
+    </script>
+</body>
+</html>

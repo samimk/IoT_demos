@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subnet Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .input-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .input-group input, .input-group select {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .results-section {
+            display: none;
+        }
+        
+        .results-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .result-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .result-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .binary-display {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .binary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .binary-label {
+            font-weight: 600;
+            color: #333;
+            min-width: 150px;
+        }
+        
+        .binary-value {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #667eea;
+            word-break: break-all;
+        }
+        
+        .octet {
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .network-bit {
+            color: #e91e63;
+            font-weight: bold;
+        }
+        
+        .host-bit {
+            color: #2196f3;
+            font-weight: bold;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #1976d2;
+        }
+        
+        .range-display {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        
+        .range-label {
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 5px;
+        }
+        
+        .range-value {
+            font-family: 'Courier New', monospace;
+            color: #856404;
+            font-size: 16px;
+        }
+        
+        .class-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #4caf50;
+            color: white;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: #999;
+            font-size: 14px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        footer .course-name {
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Kalkulator Podmreža (Subnet Calculator)</h1>
+        <div class="subtitle">Izračunavanje adresa podmreže, broadcast adrese i broja hostova</div>
+        
+        <div class="input-section">
+            <div class="input-row">
+                <div class="input-group">
+                    <label>IP Adresa:</label>
+                    <input type="text" id="ipAddress" placeholder="192.168.1.100" value="192.168.1.100">
+                </div>
+                
+                <div class="input-group">
+                    <label>Način unosa maske:</label>
+                    <select id="maskType" onchange="toggleMaskInput()">
+                        <option value="cidr">CIDR notacija (npr. /24)</option>
+                        <option value="decimal">Decimalna notacija (npr. 255.255.255.0)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="input-row">
+                <div class="input-group" id="cidrInput">
+                    <label>Maska podmreže (CIDR):</label>
+                    <input type="number" id="cidr" min="0" max="32" value="24" placeholder="24">
+                </div>
+                
+                <div class="input-group" id="decimalInput" style="display: none;">
+                    <label>Maska podmreže (Decimalna):</label>
+                    <input type="text" id="subnetMask" placeholder="255.255.255.0" value="255.255.255.0">
+                </div>
+            </div>
+            
+            <button class="btn" onclick="calculate()">🔍 Izračunaj Podmrežu</button>
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div id="results" class="results-section">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">Broj hostova</div>
+                    <div class="stat-value" id="numHosts">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Broj podmreža</div>
+                    <div class="stat-value" id="numSubnets">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Wildcard maska</div>
+                    <div class="stat-value" id="wildcardMask" style="font-size: 16px;">0.0.0.0</div>
+                </div>
+            </div>
+            
+            <div class="result-card">
+                <div class="result-label">Adresa podmreže (Network Address)</div>
+                <div class="result-value" id="networkAddress">0.0.0.0</div>
+                <span class="class-badge" id="ipClass">Klasa A</span>
+            </div>
+            
+            <div class="result-card">
+                <div class="result-label">Broadcast adresa</div>
+                <div class="result-value" id="broadcastAddress">0.0.0.0</div>
+            </div>
+            
+            <div class="result-card">
+                <div class="result-label">Maska podmreže</div>
+                <div class="result-value" id="displayMask">255.255.255.0 <span style="color: #667eea;">/24</span></div>
+            </div>
+            
+            <div class="range-display">
+                <div class="range-label">Opseg validnih IP adresa za hostove:</div>
+                <div class="range-value" id="hostRange">0.0.0.0 - 0.0.0.0</div>
+            </div>
+            
+            <div class="binary-display">
+                <h3 style="margin-bottom: 15px; color: #333;">📊 Binarni prikaz</h3>
+                
+                <div class="binary-row">
+                    <div class="binary-label">IP Adresa:</div>
+                    <div class="binary-value" id="binaryIP"></div>
+                </div>
+                
+                <div class="binary-row">
+                    <div class="binary-label">Maska podmreže:</div>
+                    <div class="binary-value" id="binaryMask"></div>
+                </div>
+                
+                <div class="binary-row">
+                    <div class="binary-label">Network Address:</div>
+                    <div class="binary-value" id="binaryNetwork"></div>
+                </div>
+                
+                <div class="binary-row">
+                    <div class="binary-label">Broadcast Address:</div>
+                    <div class="binary-value" id="binaryBroadcast"></div>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <strong>💡 Objašnjenje:</strong><br>
+                <span id="explanation"></span>
+            </div>
+        </div>
+        
+        <footer>
+            <div class="course-name">Internet stvari | Red. prof. dr Samim Konjicija</div>
+            <div>Sarajevo, 2025. godine</div>
+        </footer>
+    </div>
+
+    <script>
+        function toggleMaskInput() {
+            const maskType = document.getElementById('maskType').value;
+            const cidrInput = document.getElementById('cidrInput');
+            const decimalInput = document.getElementById('decimalInput');
+            
+            if (maskType === 'cidr') {
+                cidrInput.style.display = 'flex';
+                decimalInput.style.display = 'none';
+            } else {
+                cidrInput.style.display = 'none';
+                decimalInput.style.display = 'flex';
+            }
+        }
+        
+        function ipToNumber(ip) {
+            const parts = ip.split('.').map(Number);
+            return (parts[0] << 24) + (parts[1] << 16) + (parts[2] << 8) + parts[3];
+        }
+        
+        function numberToIp(num) {
+            return [
+                (num >>> 24) & 255,
+                (num >>> 16) & 255,
+                (num >>> 8) & 255,
+                num & 255
+            ].join('.');
+        }
+        
+        function ipToBinary(ip) {
+            return ip.split('.').map(octet => {
+                return parseInt(octet).toString(2).padStart(8, '0');
+            });
+        }
+        
+        function cidrToMask(cidr) {
+            const mask = [];
+            for (let i = 0; i < 4; i++) {
+                const n = Math.min(cidr, 8);
+                mask.push(256 - Math.pow(2, 8 - n));
+                cidr -= n;
+            }
+            return mask.join('.');
+        }
+        
+        function maskToCidr(mask) {
+            const binary = mask.split('.').map(octet => 
+                parseInt(octet).toString(2).padStart(8, '0')
+            ).join('');
+            return binary.split('1').length - 1;
+        }
+        
+        function getIpClass(firstOctet) {
+            if (firstOctet >= 1 && firstOctet <= 126) return 'A';
+            if (firstOctet >= 128 && firstOctet <= 191) return 'B';
+            if (firstOctet >= 192 && firstOctet <= 223) return 'C';
+            if (firstOctet >= 224 && firstOctet <= 239) return 'D';
+            return 'E';
+        }
+        
+        function validateIP(ip) {
+            const parts = ip.split('.');
+            if (parts.length !== 4) return false;
+            return parts.every(part => {
+                const num = parseInt(part);
+                return num >= 0 && num <= 255 && part === num.toString();
+            });
+        }
+        
+        function validateMask(mask) {
+            if (!validateIP(mask)) return false;
+            const binary = mask.split('.').map(octet => 
+                parseInt(octet).toString(2).padStart(8, '0')
+            ).join('');
+            
+            // Provjeriti da li su sve jedinice lijevo, a nule desno
+            return /^1*0*$/.test(binary);
+        }
+        
+        function calculate() {
+            const errorDiv = document.getElementById('error');
+            const resultsDiv = document.getElementById('results');
+            
+            errorDiv.style.display = 'none';
+            
+            try {
+                const ipAddress = document.getElementById('ipAddress').value.trim();
+                const maskType = document.getElementById('maskType').value;
+                
+                if (!validateIP(ipAddress)) {
+                    throw new Error('Neispravna IP adresa! Format: xxx.xxx.xxx.xxx (0-255)');
+                }
+                
+                let subnetMask;
+                let cidr;
+                
+                if (maskType === 'cidr') {
+                    cidr = parseInt(document.getElementById('cidr').value);
+                    if (cidr < 0 || cidr > 32) {
+                        throw new Error('CIDR mora biti između 0 i 32!');
+                    }
+                    subnetMask = cidrToMask(cidr);
+                } else {
+                    subnetMask = document.getElementById('subnetMask').value.trim();
+                    if (!validateMask(subnetMask)) {
+                        throw new Error('Neispravna maska podmreže!');
+                    }
+                    cidr = maskToCidr(subnetMask);
+                }
+                
+                // Izračunavanje
+                const ipNum = ipToNumber(ipAddress);
+                const maskNum = ipToNumber(subnetMask);
+                const networkNum = ipNum & maskNum;
+                const broadcastNum = networkNum | (~maskNum >>> 0);
+                const wildcardNum = ~maskNum >>> 0;
+                
+                const networkAddress = numberToIp(networkNum);
+                const broadcastAddress = numberToIp(broadcastNum);
+                const wildcardMask = numberToIp(wildcardNum);
+                
+                const numHosts = Math.pow(2, 32 - cidr) - 2;
+                const firstHost = numberToIp(networkNum + 1);
+                const lastHost = numberToIp(broadcastNum - 1);
+                
+                const firstOctet = parseInt(ipAddress.split('.')[0]);
+                const ipClass = getIpClass(firstOctet);
+                const defaultCidr = ipClass === 'A' ? 8 : ipClass === 'B' ? 16 : 24;
+                const numSubnets = Math.pow(2, cidr - defaultCidr);
+                
+                // Prikaz rezultata
+                document.getElementById('networkAddress').textContent = networkAddress;
+                document.getElementById('broadcastAddress').textContent = broadcastAddress;
+                document.getElementById('displayMask').innerHTML = `${subnetMask} <span style="color: #667eea;">/${cidr}</span>`;
+                document.getElementById('numHosts').textContent = numHosts.toLocaleString();
+                document.getElementById('numSubnets').textContent = numSubnets >= 1 ? numSubnets.toLocaleString() : 'N/A';
+                document.getElementById('wildcardMask').textContent = wildcardMask;
+                document.getElementById('hostRange').textContent = `${firstHost} - ${lastHost}`;
+                document.getElementById('ipClass').textContent = `Klasa ${ipClass}`;
+                
+                // Binarni prikaz
+                const ipBinary = ipToBinary(ipAddress);
+                const maskBinary = ipToBinary(subnetMask);
+                const networkBinary = ipToBinary(networkAddress);
+                const broadcastBinary = ipToBinary(broadcastAddress);
+                
+                document.getElementById('binaryIP').innerHTML = formatBinaryWithOctets(ipBinary);
+                document.getElementById('binaryMask').innerHTML = formatBinaryWithOctets(maskBinary);
+                document.getElementById('binaryNetwork').innerHTML = formatBinaryWithOctets(networkBinary);
+                document.getElementById('binaryBroadcast').innerHTML = formatBinaryWithOctets(broadcastBinary);
+                
+                // Objašnjenje
+                const hostBits = 32 - cidr;
+                const networkBits = cidr;
+                document.getElementById('explanation').innerHTML = 
+                    `Ova podmreža koristi <strong>${networkBits} bita za mrežni dio</strong> i <strong>${hostBits} bita za host dio</strong>. ` +
+                    `To omogućava <strong>${numHosts.toLocaleString()} korisnih IP adresa</strong> za hostove (ukupno ${Math.pow(2, hostBits)} adresa minus 2 za network i broadcast adresu). ` +
+                    `IP adresa pripada <strong>klasi ${ipClass}</strong>. ` +
+                    `${numSubnets >= 1 ? `Iz osnovne mreže klase ${ipClass} kreirano je <strong>${numSubnets.toLocaleString()} podmreža</strong>.` : ''}`;
+                
+                resultsDiv.classList.add('active');
+                
+            } catch (error) {
+                errorDiv.textContent = '❌ ' + error.message;
+                errorDiv.style.display = 'block';
+                resultsDiv.classList.remove('active');
+            }
+        }
+        
+        function formatBinaryWithOctets(binaryArray) {
+            return binaryArray.map(octet => 
+                `<span class="octet">${octet}</span>`
+            ).join(' ');
+        }
+        
+        // Omogući Enter za submit
+        document.getElementById('ipAddress').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') calculate();
+        });
+        
+        document.getElementById('cidr').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') calculate();
+        });
+        
+        document.getElementById('subnetMask').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') calculate();
+        });
+    </script>
+</body>
+</html>

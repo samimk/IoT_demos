@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASK, FSK, PSK Modulacije</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #1e3c72;
+            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+        }
+
+        button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 60, 114, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .canvas-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .canvas-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .canvas-description {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        canvas {
+            width: 100%;
+            height: 150px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            font-size: 13px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modulation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .mod-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .mod-card h3 {
+            color: #1e3c72;
+            margin-bottom: 8px;
+        }
+
+        .mod-card p {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        footer strong {
+            color: #1e3c72;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📡 Demonstracija Digitalnih Modulacija</h1>
+        <p class="subtitle">ASK, FSK i PSK - Amplitude, Frequency i Phase Shift Keying</p>
+        
+        <div class="info-box">
+            💡 <strong>Opis:</strong> Unesite sekvencu bita (0 i 1) da vidite kako se digitalni signal modulira pomoću tri osnovne tehnike: ASK (mijenja amplitudu), FSK (mijenja frekvenciju) i PSK (mijenja fazu).
+        </div>
+
+        <div class="input-section">
+            <label for="bitSequence">Sekvenca bita:</label>
+            <input type="text" id="bitSequence" placeholder="npr. 1010110010" value="1010110010" maxlength="20">
+            <button onclick="updateModulation()">Moduliraj Signal</button>
+        </div>
+
+        <div id="errorMsg"></div>
+
+        <div class="canvas-container">
+            <div class="canvas-title">
+                🔢 Digitalni Signal (Sekvenca Bita)
+            </div>
+            <div class="canvas-description">Četvrtke predstavljaju binarne podatke - visok nivo za '1', nizak nivo za '0'</div>
+            <canvas id="digitalCanvas"></canvas>
+        </div>
+
+        <div class="canvas-container">
+            <div class="canvas-title">
+                📶 ASK - Amplitude Shift Keying
+            </div>
+            <div class="canvas-description">Bit '1' ima veliku amplitudu, bit '0' ima malu ili nultu amplitudu</div>
+            <canvas id="askCanvas"></canvas>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e74c3c;"></div>
+                    <span>Nosilac (carrier)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <div class="canvas-title">
+                📻 FSK - Frequency Shift Keying
+            </div>
+            <div class="canvas-description">Bit '1' koristi višu frekvenciju, bit '0' koristi nižu frekvenciju</div>
+            <canvas id="fskCanvas"></canvas>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #27ae60;"></div>
+                    <span>Visoka frekvencija (bit 1)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2980b9;"></div>
+                    <span>Niska frekvencija (bit 0)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <div class="canvas-title">
+                🔄 PSK - Phase Shift Keying
+            </div>
+            <div class="canvas-description">Bit '1' koristi normalnu fazu (0°), bit '0' koristi invertovanu fazu (180°)</div>
+            <canvas id="pskCanvas"></canvas>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #8e44ad;"></div>
+                    <span>Signal sa promjenom faze</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="modulation-grid">
+            <div class="mod-card">
+                <h3>ASK</h3>
+                <p><strong>Prednosti:</strong> Jednostavna implementacija, niska složenost<br>
+                <strong>Mane:</strong> Osjetljiva na šum i interference<br>
+                <strong>Primjena:</strong> Optička komunikacija, jednostavni RF sistemi</p>
+            </div>
+            <div class="mod-card">
+                <h3>FSK</h3>
+                <p><strong>Prednosti:</strong> Otporna na amplitude šum, konstantna snaga<br>
+                <strong>Mane:</strong> Zauzima više bandwidth-a<br>
+                <strong>Primjena:</strong> Caller ID, radio amateri, LoRa</p>
+            </div>
+            <div class="mod-card">
+                <h3>PSK</h3>
+                <p><strong>Prednosti:</strong> Efikasna upotreba bandwidth-a, dobra u šumu<br>
+                <strong>Mane:</strong> Složenija detekcija, treba sinhronizacija<br>
+                <strong>Primjena:</strong> WiFi, sateliti, LTE/5G</p>
+            </div>
+        </div>
+
+        <footer>
+            <strong>Internet stvari</strong> | Red. prof. dr Samim Konjicija<br>
+            Sarajevo, 2025. godine
+        </footer>
+    </div>
+
+    <script>
+        function validateBits(sequence) {
+            return /^[01]+$/.test(sequence) && sequence.length > 0;
+        }
+
+        function drawDigitalSignal(canvas, bits) {
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const bitWidth = width / bits.length;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Pozadina
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            
+            //Gridlines
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(0, height/4);
+            ctx.lineTo(width, height/4);
+            ctx.moveTo(0, 3*height/4);
+            ctx.lineTo(width, 3*height/4);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Signal
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            for (let i = 0; i < bits.length; i++) {
+                const x = i * bitWidth;
+                const y = bits[i] === '1' ? height/4 : 3*height/4;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    const prevY = bits[i-1] === '1' ? height/4 : 3*height/4;
+                    ctx.lineTo(x, prevY);
+                    ctx.lineTo(x, y);
+                }
+                ctx.lineTo(x + bitWidth, y);
+            }
+            ctx.stroke();
+            
+            // Labele
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = '12px monospace';
+            for (let i = 0; i < bits.length; i++) {
+                const x = i * bitWidth + bitWidth/2;
+                ctx.fillText(bits[i], x - 4, height - 10);
+            }
+        }
+
+        function drawASK(canvas, bits) {
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const bitWidth = width / bits.length;
+            const samplesPerBit = 50;
+            const carrierFreq = 5;
+            
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Gridlines
+            ctx.strokeStyle = '#f0f0f0';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, height/2);
+            ctx.lineTo(width, height/2);
+            ctx.stroke();
+            
+            // ASK Signal
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            for (let i = 0; i < bits.length; i++) {
+                const amplitude = bits[i] === '1' ? height/3 : height/10;
+                
+                for (let s = 0; s < samplesPerBit; s++) {
+                    const x = i * bitWidth + (s / samplesPerBit) * bitWidth;
+                    const t = (i * samplesPerBit + s) / samplesPerBit;
+                    const y = height/2 + amplitude * Math.sin(2 * Math.PI * carrierFreq * t);
+                    
+                    if (i === 0 && s === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+            }
+            ctx.stroke();
+        }
+
+        function drawFSK(canvas, bits) {
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const bitWidth = width / bits.length;
+            const samplesPerBit = 50;
+            const highFreq = 8;
+            const lowFreq = 4;
+            
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Gridlines
+            ctx.strokeStyle = '#f0f0f0';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, height/2);
+            ctx.lineTo(width, height/2);
+            ctx.stroke();
+            
+            // FSK Signal - kontinualan signal kroz sve bitove
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            let phase = 0; // Pratimo kontinualnu fazu
+            
+            for (let i = 0; i < bits.length; i++) {
+                const freq = bits[i] === '1' ? highFreq : lowFreq;
+                ctx.strokeStyle = bits[i] === '1' ? '#27ae60' : '#2980b9';
+                
+                for (let s = 0; s < samplesPerBit; s++) {
+                    const x = i * bitWidth + (s / samplesPerBit) * bitWidth;
+                    const dt = 1 / samplesPerBit;
+                    const y = height/2 + (height/3) * Math.sin(phase);
+                    
+                    if (i === 0 && s === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                    
+                    // Ažuriramo fazu kontinualno
+                    phase += 2 * Math.PI * freq * dt;
+                }
+            }
+            ctx.stroke();
+        }
+
+        function drawPSK(canvas, bits) {
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const bitWidth = width / bits.length;
+            const samplesPerBit = 50;
+            const carrierFreq = 5;
+            
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Gridlines
+            ctx.strokeStyle = '#f0f0f0';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, height/2);
+            ctx.lineTo(width, height/2);
+            ctx.stroke();
+            
+            // PSK Signal
+            ctx.strokeStyle = '#8e44ad';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            for (let i = 0; i < bits.length; i++) {
+                const phase = bits[i] === '1' ? 0 : Math.PI;
+                
+                for (let s = 0; s < samplesPerBit; s++) {
+                    const x = i * bitWidth + (s / samplesPerBit) * bitWidth;
+                    const t = s / samplesPerBit;
+                    const y = height/2 + (height/3) * Math.sin(2 * Math.PI * carrierFreq * t + phase);
+                    
+                    if (i === 0 && s === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+            }
+            ctx.stroke();
+        }
+
+        function updateModulation() {
+            const input = document.getElementById('bitSequence').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            
+            if (!validateBits(input)) {
+                errorMsg.innerHTML = '<div class="error">❌ Greška: Molimo unesite samo 0 i 1 (maksimalno 20 bita)</div>';
+                return;
+            }
+            
+            errorMsg.innerHTML = '';
+            
+            const canvases = ['digitalCanvas', 'askCanvas', 'fskCanvas', 'pskCanvas'];
+            canvases.forEach(id => {
+                const canvas = document.getElementById(id);
+                canvas.width = canvas.offsetWidth * 2;
+                canvas.height = canvas.offsetHeight * 2;
+            });
+            
+            drawDigitalSignal(document.getElementById('digitalCanvas'), input);
+            drawASK(document.getElementById('askCanvas'), input);
+            drawFSK(document.getElementById('fskCanvas'), input);
+            drawPSK(document.getElementById('pskCanvas'), input);
+        }
+
+        // Enter key support
+        document.getElementById('bitSequence').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                updateModulation();
+            }
+        });
+
+        // Initial render
+        window.addEventListener('load', () => {
+            setTimeout(updateModulation, 100);
+        });
+
+        // Redraw on window resize
+        window.addEventListener('resize', () => {
+            updateModulation();
+        });
+    </script>
+</body>
+</html>

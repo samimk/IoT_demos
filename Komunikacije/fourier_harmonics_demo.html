@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fourier Harmonici - IoT Komunikacije</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .control-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        input[type="range"] {
+            flex: 1;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .value-display {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 50px;
+            text-align: center;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .signal-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .signal-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            min-width: 120px;
+        }
+        .signal-btn:hover {
+            background: #f0f0f0;
+        }
+        .signal-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            display: block;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .graph-title {
+            text-align: center;
+            font-weight: 600;
+            color: #333;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        .gibbs-warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: #999;
+            font-size: 14px;
+            border-top: 1px solid #e0e0e0;
+        }
+        footer .course-name {
+            font-weight: 600;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌊 Fourierova Analiza Signala</h1>
+        <div class="subtitle">Demonstracija uticaja ograničenog broja harmonika na rekonstrukciju signala</div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Tip signala:</label>
+                <div class="signal-buttons">
+                    <button class="signal-btn active" onclick="setSignalType('square')">Četvrtka (Square)</button>
+                    <button class="signal-btn" onclick="setSignalType('sawtooth')">Testera (Sawtooth)</button>
+                    <button class="signal-btn" onclick="setSignalType('triangle')">Trougao (Triangle)</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Broj harmonika: <span id="harmonicsLabel">10</span></label>
+                <div class="slider-container">
+                    <input type="range" id="harmonicsSlider" min="1" max="50" value="10" oninput="updateHarmonics(this.value)">
+                    <div class="value-display" id="harmonicsValue">10</div>
+                </div>
+            </div>
+            
+            <div class="gibbs-warning" id="gibbsWarning">
+                ⚠️ <strong>Gibbsov fenomen:</strong> Vidljiv "overshoot" (~9%) kod diskontinuiteta signala, ne nestaje povećanjem broja harmonika.
+            </div>
+        </div>
+
+        <div class="graph-title">📊 Originalni Signal (idealan - beskonačno harmonika)</div>
+        <canvas id="originalCanvas" width="1200" height="300"></canvas>
+
+        <div class="graph-title">📉 Rekonstruisani Signal (ograničen broj harmonika)</div>
+        <canvas id="reconstructedCanvas" width="1200" height="300"></canvas>
+
+        <div class="graph-title">📈 Frekvencijski Spektar (amplitude harmonika)</div>
+        <canvas id="spectrumCanvas" width="1200" height="300"></canvas>
+
+        <div class="info-box">
+            <h3>💡 Važnost za IoT komunikacije:</h3>
+            <p><strong>Bandwidth ograničenja:</strong> Komunikacijski kanal ne može prenijeti sve frekvencije. Što je bandwidth uži, manje harmonika prolazi kroz kanal, što dovodi do izobličenja signala.</p>
+            <p><strong>Praktična primjena:</strong> Digitalni signali (0 i 1) su u osnovi četvrtasti talasi. Ako kanal ima ograničen bandwidth, ivice signala postaju zaobljene, što može uzrokovati greške u prenosu na visokim brzinama.</p>
+            <p><strong>Nyquist-Shannon teorem:</strong> Za preciznu rekonstrukciju signala frekvencije f potreban je sampling rate od najmanje 2f (Nyquist rate).</p>
+        </div>
+
+        <footer>
+            <div class="course-name">Internet stvari | Red. prof. dr Samim Konjicija</div>
+            <div>Sarajevo, 2025. godine</div>
+        </footer>
+    </div>
+
+    <script>
+        let signalType = 'square';
+        let numHarmonics = 10;
+        
+        const originalCanvas = document.getElementById('originalCanvas');
+        const reconstructedCanvas = document.getElementById('reconstructedCanvas');
+        const spectrumCanvas = document.getElementById('spectrumCanvas');
+        
+        const ctxOriginal = originalCanvas.getContext('2d');
+        const ctxReconstructed = reconstructedCanvas.getContext('2d');
+        const ctxSpectrum = spectrumCanvas.getContext('2d');
+
+        function setSignalType(type) {
+            signalType = type;
+            document.querySelectorAll('.signal-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            drawAll();
+        }
+
+        function updateHarmonics(value) {
+            numHarmonics = parseInt(value);
+            document.getElementById('harmonicsValue').textContent = value;
+            document.getElementById('harmonicsLabel').textContent = value;
+            
+            // Prikaži upozorenje o Gibbsovom fenomenu za square i sawtooth
+            const warning = document.getElementById('gibbsWarning');
+            if ((signalType === 'square' || signalType === 'sawtooth') && numHarmonics >= 5) {
+                warning.style.display = 'block';
+            } else {
+                warning.style.display = 'none';
+            }
+            
+            drawAll();
+        }
+
+        function drawGrid(ctx, width, height) {
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            
+            // Vertikalne linije
+            for (let x = 0; x <= width; x += 60) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            // Horizontalne linije
+            for (let y = 0; y <= height; y += 30) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            // Osa X (deblja)
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, height / 2);
+            ctx.lineTo(width, height / 2);
+            ctx.stroke();
+        }
+
+        function fourierSquare(x, n) {
+            let sum = 0;
+            for (let k = 1; k <= n; k += 2) {
+                sum += (1 / k) * Math.sin(k * x);
+            }
+            return (4 / Math.PI) * sum;
+        }
+
+        function fourierSawtooth(x, n) {
+            let sum = 0;
+            for (let k = 1; k <= n; k++) {
+                sum += (Math.pow(-1, k + 1) / k) * Math.sin(k * x);
+            }
+            return (2 / Math.PI) * sum;
+        }
+
+        function fourierTriangle(x, n) {
+            let sum = 0;
+            for (let k = 1; k <= n; k += 2) {
+                sum += (Math.pow(-1, (k - 1) / 2) / (k * k)) * Math.sin(k * x);
+            }
+            return (8 / (Math.PI * Math.PI)) * sum;
+        }
+
+        function getOriginalSignal(x) {
+            const period = 2 * Math.PI;
+            const phase = (x % period + period) % period;
+            
+            switch(signalType) {
+                case 'square':
+                    return phase < Math.PI ? 1 : -1;
+                case 'sawtooth':
+                    return 1 - 2 * (phase / period);
+                case 'triangle':
+                    return phase < Math.PI ? 
+                           -1 + 2 * (phase / Math.PI) : 
+                           3 - 2 * (phase / Math.PI);
+            }
+        }
+
+        function getReconstructedSignal(x, n) {
+            switch(signalType) {
+                case 'square':
+                    return fourierSquare(x, n);
+                case 'sawtooth':
+                    return fourierSawtooth(x, n);
+                case 'triangle':
+                    return fourierTriangle(x, n);
+            }
+        }
+
+        function drawSignal(ctx, width, height, isOriginal, harmonics) {
+            ctx.clearRect(0, 0, width, height);
+            drawGrid(ctx, width, height);
+            
+            const centerY = height / 2;
+            const amplitude = height / 3;
+            const periods = 3;
+            
+            ctx.beginPath();
+            ctx.strokeStyle = isOriginal ? '#2196f3' : '#e91e63';
+            ctx.lineWidth = 2.5;
+            
+            for (let x = 0; x < width; x++) {
+                const angle = (x / width) * periods * 2 * Math.PI;
+                let y;
+                
+                if (isOriginal) {
+                    y = centerY - getOriginalSignal(angle) * amplitude;
+                } else {
+                    y = centerY - getReconstructedSignal(angle, harmonics) * amplitude;
+                }
+                
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+            
+            // Oznake
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.fillText('Amplituda', 10, 20);
+            ctx.fillText('Vrijeme / Faza', width - 100, height - 10);
+            
+            // Oznaka signala
+            ctx.fillStyle = isOriginal ? '#2196f3' : '#e91e63';
+            ctx.font = 'bold 14px Arial';
+            const label = isOriginal ? 'Idealan signal' : `Rekonstrukcija (${harmonics} harmonika)`;
+            ctx.fillText(label, width - 250, 30);
+        }
+
+        function getHarmonicAmplitude(k) {
+            switch(signalType) {
+                case 'square':
+                    return (k % 2 === 1) ? 4 / (Math.PI * k) : 0;
+                case 'sawtooth':
+                    return (2 / Math.PI) * (Math.pow(-1, k + 1) / k);
+                case 'triangle':
+                    return (k % 2 === 1) ? (8 / (Math.PI * Math.PI)) * (Math.pow(-1, (k - 1) / 2) / (k * k)) : 0;
+            }
+        }
+
+        function drawSpectrum(ctx, width, height, n) {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Grid
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            for (let y = 0; y <= height; y += 30) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            const barWidth = (width - 100) / 50;
+            const maxAmplitude = 1.5;
+            
+            for (let k = 1; k <= 50; k++) {
+                const amplitude = Math.abs(getHarmonicAmplitude(k));
+                const barHeight = (amplitude / maxAmplitude) * (height - 40);
+                const x = 50 + (k - 1) * barWidth;
+                const y = height - 20 - barHeight;
+                
+                // Boja: crvena za uključene, siva za isključene harmonike
+                if (k <= n) {
+                    const intensity = Math.min(255, 100 + (amplitude / maxAmplitude) * 155);
+                    ctx.fillStyle = `rgb(255, ${255 - intensity}, ${255 - intensity})`;
+                } else {
+                    ctx.fillStyle = '#ddd';
+                }
+                
+                ctx.fillRect(x, y, barWidth - 2, barHeight);
+                
+                // Oznake za svaki 5. harmonik
+                if (k % 5 === 0) {
+                    ctx.fillStyle = '#666';
+                    ctx.font = '10px Arial';
+                    ctx.fillText(k.toString(), x, height - 5);
+                }
+            }
+            
+            // Oznake osa
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.fillText('Amplituda', 10, 20);
+            ctx.fillText('Broj harmonika (k)', width / 2 - 50, height - 5);
+            
+            // Legenda
+            ctx.fillStyle = '#ff4444';
+            ctx.fillRect(width - 180, 20, 15, 15);
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.fillText('Uključeni harmonici', width - 160, 32);
+            
+            ctx.fillStyle = '#ddd';
+            ctx.fillRect(width - 180, 40, 15, 15);
+            ctx.fillStyle = '#666';
+            ctx.fillText('Isključeni harmonici', width - 160, 52);
+        }
+
+        function drawAll() {
+            drawSignal(ctxOriginal, originalCanvas.width, originalCanvas.height, true, numHarmonics);
+            drawSignal(ctxReconstructed, reconstructedCanvas.width, reconstructedCanvas.height, false, numHarmonics);
+            drawSpectrum(ctxSpectrum, spectrumCanvas.width, spectrumCanvas.height, numHarmonics);
+        }
+
+        // Inicijalno crtanje
+        drawAll();
+    </script>
+</body>
+</html>
