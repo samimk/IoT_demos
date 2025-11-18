@@ -10,7 +10,7 @@
 
 '''
 
-from machine import Pin
+from machine import Pin, PWM
 import time
 import network
 from umqtt.robust import MQTTClient
@@ -32,6 +32,21 @@ led7=Pin(11,Pin.OUT)
 
 ledice=[led0,led1,led2,led3,led4,led5,led6,led7]
 
+# RGB LED setup - PWM pinovi za kontrolu intenziteta
+rgb_g = PWM(Pin(12))  # Zelena komponenta
+rgb_b = PWM(Pin(13))  # Plava komponenta
+rgb_r = PWM(Pin(14))  # Crvena komponenta
+
+# Postavljanje frekvencije PWM signala na 1000 Hz
+rgb_r.freq(1000)
+rgb_g.freq(1000)
+rgb_b.freq(1000)
+
+# Inicijalno gašenje RGB LED
+rgb_r.duty_u16(0)
+rgb_g.duty_u16(0)
+rgb_b.duty_u16(0)
+
 
 # Uspostavljanje WiFI konekcije
 nic = network.WLAN(network.STA_IF)
@@ -49,20 +64,44 @@ ipaddr=nic.ifconfig()[0]
 print("Mrežne postavke:")
 print(nic.ifconfig())
 
+# Funkcija za mapiranje vrijednosti 0-100 na PWM duty cycle 0-65535
+def map_value(value, in_min=0, in_max=100, out_min=0, out_max=65535):
+    return int((value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
+
 # Funkcija koja se izvršava na prijem MQTT poruke
 def sub(topic,msg):
     parsed=ujson.loads(msg)
-    led=parsed["led"]
-    stanje=parsed["stanje"]
     print('Tema: '+str(topic))
     print('Poruka: '+str(msg))
-    print('LED: '+str(led))
-    print('Stanje: '+str(stanje))
 
-    if stanje==1:
-        ledice[led].on()
-    else:
-        ledice[led].off()
+    # Provjera da li je poruka za RGB LED kontrolu
+    if "R" in parsed and "G" in parsed and "B" in parsed:
+        r_val = parsed["R"]
+        g_val = parsed["G"]
+        b_val = parsed["B"]
+        print('RGB LED kontrola - R: '+str(r_val)+', G: '+str(g_val)+', B: '+str(b_val))
+
+        # Ograničavanje vrijednosti na raspon 0-100
+        r_val = max(0, min(100, r_val))
+        g_val = max(0, min(100, g_val))
+        b_val = max(0, min(100, b_val))
+
+        # Postavljanje PWM duty cycle-a za svaku komponentu
+        rgb_r.duty_u16(map_value(r_val))
+        rgb_g.duty_u16(map_value(g_val))
+        rgb_b.duty_u16(map_value(b_val))
+
+    # Kontrola klasičnih LED dioda
+    elif "led" in parsed and "stanje" in parsed:
+        led=parsed["led"]
+        stanje=parsed["stanje"]
+        print('LED: '+str(led))
+        print('Stanje: '+str(stanje))
+
+        if stanje==1:
+            ledice[led].on()
+        else:
+            ledice[led].off()
 
 # Funkcije za slanje MQTT poruka na pritisak tastera
 def t1_publish(p):
