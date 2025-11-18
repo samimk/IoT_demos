@@ -9,7 +9,7 @@
 
 '''
 
-from machine import Pin
+from machine import Pin, PWM
 import time
 import network
 from umqtt.robust import MQTTClient
@@ -29,6 +29,21 @@ led5=Pin(9,Pin.OUT)
 led6=Pin(10,Pin.OUT)
 led7=Pin(11,Pin.OUT)
 
+# RGB LED setup - PWM pinovi za kontrolu intenziteta
+rgb_g = PWM(Pin(12))  # Zelena komponenta
+rgb_b = PWM(Pin(13))  # Plava komponenta
+rgb_r = PWM(Pin(14))  # Crvena komponenta
+
+# Postavljanje frekvencije PWM signala na 1000 Hz
+rgb_r.freq(1000)
+rgb_g.freq(1000)
+rgb_b.freq(1000)
+
+# Inicijalno gašenje RGB LED
+rgb_r.duty_u16(0)
+rgb_g.duty_u16(0)
+rgb_b.duty_u16(0)
+
 # Uspostavljanje WiFI konekcije
 nic = network.WLAN(network.STA_IF)
 nic.active(True)
@@ -45,10 +60,33 @@ ipaddr=nic.ifconfig()[0]
 print("Mrežne postavke:")
 print(nic.ifconfig())
 
+# Funkcija za mapiranje vrijednosti 0-100 na PWM duty cycle 0-65535
+def map_value(value, in_min=0, in_max=100, out_min=0, out_max=65535):
+    return int((value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
+
 # Funkcija koja se izvršava na prijem MQTT poruke
 def sub(topic,msg):
     print('Tema: '+str(topic))
     print('Poruka: '+str(msg))
+
+    # Kontrola RGB LED-a
+    if topic==b'picoetf/r':
+        value = int(msg)
+        value = max(0, min(100, value))  # Ograničavanje na 0-100
+        rgb_r.duty_u16(map_value(value))
+        print('Crvena: '+str(value))
+    elif topic==b'picoetf/g':
+        value = int(msg)
+        value = max(0, min(100, value))  # Ograničavanje na 0-100
+        rgb_g.duty_u16(map_value(value))
+        print('Zelena: '+str(value))
+    elif topic==b'picoetf/b':
+        value = int(msg)
+        value = max(0, min(100, value))  # Ograničavanje na 0-100
+        rgb_b.duty_u16(map_value(value))
+        print('Plava: '+str(value))
+
+    # Kontrola klasičnih LED dioda
     if topic==b'picoetf/led0':
         if msg==b'1':
             led0.on()
