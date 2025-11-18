@@ -48,7 +48,7 @@ rgb_b.duty_u16(0)
 nic = network.WLAN(network.STA_IF)
 nic.active(True)
 #nic.connect('E74KS-1','asdfghjkl')
-nic.connect('wl160.spirit.ba','0801070719070711')
+nic.connect('SSID','PASSWORD')
 
 while not nic.isconnected():
     print("Čekam konekciju ...")
