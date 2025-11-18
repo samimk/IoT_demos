@@ -47,7 +47,6 @@ rgb_b.duty_u16(0)
 # Uspostavljanje WiFI konekcije
 nic = network.WLAN(network.STA_IF)
 nic.active(True)
-#nic.connect('E74KS-1','asdfghjkl')
 nic.connect('SSID','PASSWORD')
 
 while not nic.isconnected():
